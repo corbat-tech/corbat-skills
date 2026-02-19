@@ -9,6 +9,16 @@ allowed-tools: Bash, Read, Write, Edit, Grep, Glob, Task
 
 Apply code fixes based on review findings, prioritized by severity. This is a **single pass** — it applies fixes once and verifies them.
 
+## How it works
+
+This skill is **agent-implemented** — the agent reads the steps below and executes them autonomously. There is no standalone bash script.
+
+```
+/code-fix
+/code-fix "P0 only"
+/code-fix security
+```
+
 ## Input
 
 - `$ARGUMENTS` = optional focus (e.g., "P0 only", "security", "tests", or a file path)

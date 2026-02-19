@@ -11,6 +11,16 @@ Autonomous iterative quality loop that reviews, scores, plans fixes, applies the
 
 This skill combines the best of `/code-review` and `/code-fix` into a self-driving convergence loop.
 
+## How it works
+
+This skill is **agent-implemented** — the agent reads the steps below and executes them autonomously. There is no standalone bash script.
+
+```
+/coco-fix-iterate
+/coco-fix-iterate --score 90
+/coco-fix-iterate --max-iterations 5 security
+```
+
 ## Input
 
 - `$ARGUMENTS` may contain:

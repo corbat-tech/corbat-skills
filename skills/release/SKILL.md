@@ -9,6 +9,16 @@ allowed-tools: Bash, Read, Write, Edit, Grep, Glob, Task, WebFetch
 
 You are executing a full release cycle for this project. Follow every step in order. Do NOT skip steps. Do NOT add "Co-Authored-By" to any commit or PR.
 
+## How it works
+
+This skill is **agent-implemented** — the agent reads the steps below and executes them autonomously. There is no standalone bash script.
+
+```
+/release
+/release patch
+/release minor
+```
+
 ## Input
 
 - `$ARGUMENTS` = version bump type: `patch`, `minor`, or `major`

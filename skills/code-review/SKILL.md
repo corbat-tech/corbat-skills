@@ -9,6 +9,16 @@ allowed-tools: Bash, Read, Grep, Glob, Task
 
 Comprehensive code quality review with numeric scoring. **Read-only** — this skill does not modify any files.
 
+## How it works
+
+This skill is **agent-implemented** — the agent reads the steps below and executes them autonomously. There is no standalone bash script.
+
+```
+/code-review
+/code-review security
+/code-review src/api/
+```
+
 ## Input
 
 - `$ARGUMENTS` = optional focus area (e.g., "security", "tests", "src/api/")

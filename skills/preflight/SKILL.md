@@ -9,6 +9,14 @@ allowed-tools: Bash, Read, Grep, Glob
 
 Run all validations to confirm the project is ready for release. This does NOT create commits, PRs, tags, or publish anything.
 
+## How it works
+
+This skill is **agent-implemented** — the agent reads the steps below and executes them autonomously. There is no standalone bash script.
+
+```
+/preflight
+```
+
 ## Step 1: Environment checks
 
 ```bash

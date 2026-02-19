@@ -9,6 +9,15 @@ allowed-tools: Bash, Read, Write, Edit, Grep, Glob
 
 Streamlined release workflow for urgent patch fixes. Skips README updates and uses abbreviated changelog entries.
 
+## How it works
+
+This skill is **agent-implemented** — the agent reads the steps below and executes them autonomously. There is no standalone bash script.
+
+```
+/hotfix
+/hotfix "fix timeout on slow connections"
+```
+
 ## Input
 
 - `$ARGUMENTS` = optional description of what was fixed (used in changelog and commit)

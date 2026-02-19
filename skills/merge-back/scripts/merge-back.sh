@@ -87,22 +87,33 @@ if [ "$COMMIT_COUNT" = "0" ]; then
   echo ""
 fi
 
+# Detect package manager
+detect_pkg_manager() {
+  if [ -f "pnpm-lock.yaml" ]; then echo "pnpm"
+  elif [ -f "yarn.lock" ]; then echo "yarn"
+  elif [ -f "package-lock.json" ]; then echo "npm"
+  elif [ -f "package.json" ]; then echo "npm"
+  else echo ""
+  fi
+}
+
 # Run tests if available
 if [ -f "package.json" ]; then
+  PKG_MGR=$(detect_pkg_manager)
   HAS_CHECK=$(node -e "const p=require('./package.json'); console.log(p.scripts?.check ? 'yes' : 'no')" 2>/dev/null || echo "no")
   HAS_TEST=$(node -e "const p=require('./package.json'); console.log(p.scripts?.test ? 'yes' : 'no')" 2>/dev/null || echo "no")
 
   if [ "$HAS_CHECK" = "yes" ]; then
-    echo "  Running checks in copy..."
-    if ! pnpm check 2>&1; then
+    echo "  Running checks in copy ($PKG_MGR)..."
+    if ! $PKG_MGR run check 2>&1; then
       echo ""
       echo "Error: checks failed in the copy. Fix issues before merging."
       exit 1
     fi
     echo "  Checks passed."
   elif [ "$HAS_TEST" = "yes" ]; then
-    echo "  Running tests in copy..."
-    if ! pnpm test 2>&1; then
+    echo "  Running tests in copy ($PKG_MGR)..."
+    if ! $PKG_MGR test 2>&1; then
       echo ""
       echo "Error: tests failed in the copy. Fix issues before merging."
       exit 1
@@ -111,6 +122,22 @@ if [ -f "package.json" ]; then
   else
     echo "  No test/check script found, skipping."
   fi
+elif [ -f "Cargo.toml" ]; then
+  echo "  Running cargo test in copy..."
+  if ! cargo test 2>&1; then
+    echo ""
+    echo "Error: tests failed in the copy. Fix issues before merging."
+    exit 1
+  fi
+  echo "  Tests passed."
+elif [ -f "pyproject.toml" ] || [ -f "setup.py" ]; then
+  echo "  Running pytest in copy..."
+  if ! pytest 2>&1; then
+    echo ""
+    echo "Error: tests failed in the copy. Fix issues before merging."
+    exit 1
+  fi
+  echo "  Tests passed."
 fi
 echo ""
 
