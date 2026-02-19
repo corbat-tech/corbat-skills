@@ -82,7 +82,11 @@ If checks fail, fix and retry (max 3 attempts). This is a hotfix - speed matters
 ## Step 4: Commit and push
 
 ```bash
-git add CHANGELOG.md package.json pnpm-lock.yaml 2>/dev/null; git add CHANGELOG.md package.json
+git add CHANGELOG.md package.json
+# Also stage the lockfile if it exists
+[ -f pnpm-lock.yaml ] && git add pnpm-lock.yaml
+[ -f yarn.lock ] && git add yarn.lock
+[ -f package-lock.json ] && git add package-lock.json
 git commit -m "chore(release): hotfix vX.Y.Z"
 git push origin $(git branch --show-current)
 ```

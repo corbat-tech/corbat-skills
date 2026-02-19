@@ -44,5 +44,4 @@ bash .claude/skills/release-pr/scripts/release-pr.sh [patch|minor|major]
 - The tag is pushed to the remote, which may trigger CI/CD pipelines
 - No `Co-Authored-By` headers are added to any commit
 - Review the merge branch changes carefully before running this
-- Requires `gh` CLI to be installed for PR creation
 - You can override the auto-detected bump type by passing `patch`, `minor`, or `major`

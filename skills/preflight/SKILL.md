@@ -57,7 +57,7 @@ Detect and run the project's check/test command:
 if [ -f "pnpm-lock.yaml" ]; then
   pnpm check 2>/dev/null || pnpm test
 elif [ -f "yarn.lock" ]; then
-  yarn check 2>/dev/null || yarn test
+  yarn run check 2>/dev/null || yarn test
 elif [ -f "package-lock.json" ]; then
   npm run check 2>/dev/null || npm test
 elif [ -f "Cargo.toml" ]; then

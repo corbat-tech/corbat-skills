@@ -102,7 +102,13 @@ If after 5 attempts checks still fail, STOP and report the issue.
 Stage only the relevant files and commit:
 
 ```bash
-git add CHANGELOG.md README.md package.json
+git add CHANGELOG.md package.json
+# Only stage README if it was actually modified
+git diff --quiet README.md 2>/dev/null || git add README.md
+# Also stage the lockfile if it exists
+[ -f pnpm-lock.yaml ] && git add pnpm-lock.yaml
+[ -f yarn.lock ] && git add yarn.lock
+[ -f package-lock.json ] && git add package-lock.json
 git commit -m "chore(release): bump version to NEW_VERSION"
 ```
 

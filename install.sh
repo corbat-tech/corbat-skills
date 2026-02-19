@@ -16,18 +16,21 @@ shift
 # Resolve paths
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SKILLS_DIR="${SCRIPT_DIR}/skills"
-TARGET="$(cd "$TARGET" && pwd)"
-TARGET_SKILLS="${TARGET}/.claude/skills"
-
 if [ ! -d "$TARGET" ]; then
   echo "Error: target directory does not exist: $TARGET"
   exit 1
 fi
 
+TARGET="$(cd "$TARGET" && pwd)"
+TARGET_SKILLS="${TARGET}/.claude/skills"
+
 # Determine which skills to install
 if [ $# -eq 0 ]; then
   # Install all skills
-  SKILLS=($(ls -d "$SKILLS_DIR"/*/  | xargs -I{} basename {}))
+  SKILLS=()
+  for dir in "$SKILLS_DIR"/*/; do
+    [ -d "$dir" ] && SKILLS+=("$(basename "$dir")")
+  done
 else
   SKILLS=("$@")
 fi

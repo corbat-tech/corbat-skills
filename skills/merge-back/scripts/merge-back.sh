@@ -23,6 +23,14 @@ set -euo pipefail
 # =============================================================================
 
 FEATURE_NAME="${1:?Error: feature name required. Usage: merge-back.sh <feature-name> [original-dir]}"
+
+# Validate feature name: only allow alphanumeric, hyphens, underscores, and dots
+if [[ ! "$FEATURE_NAME" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+  echo "Error: invalid feature name '$FEATURE_NAME'"
+  echo "Only alphanumeric characters, hyphens, underscores, and dots are allowed."
+  exit 1
+fi
+
 ORIGINAL_DIR="${2:-$(pwd)}"
 
 # Resolve absolute path
@@ -100,12 +108,12 @@ detect_pkg_manager() {
 # Run tests if available
 if [ -f "package.json" ]; then
   PKG_MGR=$(detect_pkg_manager)
-  HAS_CHECK=$(node -e "const p=require('./package.json'); console.log(p.scripts?.check ? 'yes' : 'no')" 2>/dev/null || echo "no")
-  HAS_TEST=$(node -e "const p=require('./package.json'); console.log(p.scripts?.test ? 'yes' : 'no')" 2>/dev/null || echo "no")
+  HAS_CHECK=$(node --input-type=commonjs -e "const p=require('./package.json'); console.log(p.scripts?.check ? 'yes' : 'no')" 2>/dev/null || echo "no")
+  HAS_TEST=$(node --input-type=commonjs -e "const p=require('./package.json'); console.log(p.scripts?.test ? 'yes' : 'no')" 2>/dev/null || echo "no")
 
   if [ "$HAS_CHECK" = "yes" ]; then
     echo "  Running checks in copy ($PKG_MGR)..."
-    if ! $PKG_MGR run check 2>&1; then
+    if ! "$PKG_MGR" run check 2>&1; then
       echo ""
       echo "Error: checks failed in the copy. Fix issues before merging."
       exit 1
@@ -113,7 +121,7 @@ if [ -f "package.json" ]; then
     echo "  Checks passed."
   elif [ "$HAS_TEST" = "yes" ]; then
     echo "  Running tests in copy ($PKG_MGR)..."
-    if ! $PKG_MGR test 2>&1; then
+    if ! "$PKG_MGR" test 2>&1; then
       echo ""
       echo "Error: tests failed in the copy. Fix issues before merging."
       exit 1
@@ -155,6 +163,14 @@ else
   STASHED=false
 fi
 
+cleanup_stash() {
+  if [ "$STASHED" = "true" ]; then
+    cd "$ORIGINAL_DIR" 2>/dev/null || true
+    git stash pop 2>/dev/null || true
+  fi
+}
+trap cleanup_stash EXIT
+
 echo "[3/5] Adding copy as temporary remote..."
 # Remove remote if it already exists (from a previous failed attempt)
 git remote remove "$REMOTE_NAME" 2>/dev/null || true
@@ -195,12 +211,6 @@ fi
 
 echo "[5/5] Cleaning up temporary remote..."
 git remote remove "$REMOTE_NAME"
-
-# Restore stash if needed
-if [ "$STASHED" = "true" ]; then
-  echo "  Restoring stashed changes..."
-  git stash pop || echo "  Warning: could not restore stash automatically"
-fi
 
 echo ""
 

@@ -44,10 +44,10 @@ fi
 
 FEATURE_NAME="${CURRENT_BRANCH#merge/}"
 
-# Check gh CLI is available
-if ! command -v gh &> /dev/null; then
-  echo "Error: GitHub CLI (gh) is not installed."
-  echo "Install it: https://cli.github.com/"
+# Validate feature name: only allow alphanumeric, hyphens, underscores, and dots
+if [[ ! "$FEATURE_NAME" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+  echo "Error: invalid feature name '$FEATURE_NAME'"
+  echo "Only alphanumeric characters, hyphens, underscores, and dots are allowed."
   exit 1
 fi
 
@@ -77,7 +77,7 @@ echo "$COMMITS" | sed 's/^/    /'
 echo ""
 
 if [ "$BUMP_TYPE" = "auto" ]; then
-  if echo "$COMMITS" | grep -qiE "BREAKING CHANGE|!:"; then
+  if echo "$COMMITS" | grep -qE "BREAKING CHANGE|!:"; then
     BUMP_TYPE="major"
   elif echo "$COMMITS" | grep -qiE "^[a-f0-9]+ feat"; then
     BUMP_TYPE="minor"
@@ -99,7 +99,7 @@ LATEST_VERSION="${LATEST_TAG#v}"
 
 # Also check package.json version
 if [ -f "package.json" ]; then
-  PKG_VERSION=$(node -e "console.log(require('./package.json').version)" 2>/dev/null || echo "")
+  PKG_VERSION=$(node --input-type=commonjs -e "console.log(require('./package.json').version)" 2>/dev/null || echo "")
   if [ -n "$PKG_VERSION" ]; then
     # Use the higher version between tag and package.json
     if [ "$(printf '%s\n' "$LATEST_VERSION" "$PKG_VERSION" | sort -V | tail -1)" = "$PKG_VERSION" ]; then
@@ -141,15 +141,15 @@ echo "[3/6] Updating version references..."
 
 if [ -f "package.json" ]; then
   # Use node to update version safely (preserves formatting)
-  node -e "
+  NEW_VERSION="$NEW_VERSION" node --input-type=commonjs -e "
     const fs = require('fs');
     const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-    pkg.version = '${NEW_VERSION}';
+    pkg.version = process.env.NEW_VERSION;
     fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
   "
   echo "  Updated package.json version to $NEW_VERSION"
   git add package.json
-  git commit -m "chore: bump version to $NEW_VERSION" --no-verify
+  git commit -m "chore: bump version to $NEW_VERSION"
 fi
 
 # --- Phase 4: Merge to main ---

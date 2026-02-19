@@ -21,6 +21,14 @@ set -euo pipefail
 # =============================================================================
 
 FEATURE_NAME="${1:?Error: feature name required. Usage: fork-project.sh <feature-name> [project-dir]}"
+
+# Validate feature name: only allow alphanumeric, hyphens, underscores, and dots
+if [[ ! "$FEATURE_NAME" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+  echo "Error: invalid feature name '$FEATURE_NAME'"
+  echo "Only alphanumeric characters, hyphens, underscores, and dots are allowed."
+  exit 1
+fi
+
 PROJECT_DIR="${2:-$(pwd)}"
 
 # Resolve absolute path
