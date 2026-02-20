@@ -35,7 +35,6 @@ PROJECT_NAME="$(basename "$ORIGINAL_DIR")"
 PARENT_DIR="$(dirname "$ORIGINAL_DIR")"
 COPY_DIR="${PARENT_DIR}/${PROJECT_NAME}_copy_${FEATURE_NAME}"
 REMOTE_NAME="copy_${FEATURE_NAME}"
-MERGE_BRANCH="merge/${FEATURE_NAME}"
 
 # --- Validations ---
 
@@ -53,14 +52,15 @@ echo ""
 
 # --- Safety checks ---
 
-# Check if merge branch exists in original (indicating merge was done)
+# Check if changes from copy have been merged into main
 cd "$ORIGINAL_DIR"
-if ! git rev-parse --verify "$MERGE_BRANCH" >/dev/null 2>&1; then
-  echo "WARNING: branch '$MERGE_BRANCH' not found in the original project."
-  echo "This may mean changes have NOT been merged back yet."
-  echo ""
-  echo "If you're sure you want to delete the copy anyway, the script will proceed."
-  echo ""
+COPY_BRANCH_REF=$(cd "$COPY_DIR" && git rev-parse "work/${FEATURE_NAME}" 2>/dev/null || true)
+if [ -n "$COPY_BRANCH_REF" ]; then
+  if ! git merge-base --is-ancestor "$COPY_BRANCH_REF" main 2>/dev/null; then
+    echo "WARNING: changes from the copy do not appear to be merged into main yet."
+    echo "Run /merge-back $FEATURE_NAME first, or proceed anyway if you're sure."
+    echo ""
+  fi
 fi
 
 # Check for uncommitted changes in the copy

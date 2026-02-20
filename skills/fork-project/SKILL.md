@@ -37,5 +37,5 @@ Where `<feature-name>` is the name provided by the user (e.g., `auth-refactor`, 
 
 - The copy is created in the **parent directory** of the current project
 - The copy has a **completely isolated `.git`** - no shared state with the original
-- The original project remote is removed from the copy to prevent accidental pushes
+- The `origin` remote is removed from the copy to prevent accidental pushes — `merge-back` will re-add it as a temporary remote during the merge step
 - Always inform the user of the full path to the copy so they can open their agent there

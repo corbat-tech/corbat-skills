@@ -22,7 +22,17 @@ set -euo pipefail
 #   5. Removes the temporary remote
 # =============================================================================
 
-FEATURE_NAME="${1:?Error: feature name required. Usage: merge-back.sh <feature-name> [original-dir]}"
+# Parse flags and positional arguments
+CLEANUP=false
+POSITIONAL=()
+for arg in "$@"; do
+  case $arg in
+    --cleanup|-c) CLEANUP=true ;;
+    *) POSITIONAL+=("$arg") ;;
+  esac
+done
+
+FEATURE_NAME="${POSITIONAL[0]:?Error: feature name required. Usage: merge-back.sh <feature-name> [--cleanup] [original-dir]}"
 
 # Validate feature name: only allow alphanumeric, hyphens, underscores, and dots
 if [[ ! "$FEATURE_NAME" =~ ^[a-zA-Z0-9._-]+$ ]]; then
@@ -31,7 +41,7 @@ if [[ ! "$FEATURE_NAME" =~ ^[a-zA-Z0-9._-]+$ ]]; then
   exit 1
 fi
 
-ORIGINAL_DIR="${2:-$(pwd)}"
+ORIGINAL_DIR="${POSITIONAL[1]:-$(pwd)}"
 
 # Resolve absolute path
 ORIGINAL_DIR="$(cd "$ORIGINAL_DIR" && pwd)"
@@ -39,7 +49,6 @@ PROJECT_NAME="$(basename "$ORIGINAL_DIR")"
 PARENT_DIR="$(dirname "$ORIGINAL_DIR")"
 COPY_DIR="${PARENT_DIR}/${PROJECT_NAME}_copy_${FEATURE_NAME}"
 REMOTE_NAME="copy_${FEATURE_NAME}"
-MERGE_BRANCH="merge/${FEATURE_NAME}"
 
 # --- Validations ---
 
@@ -79,7 +88,7 @@ fi
 echo "=== Merge Back ==="
 echo "Copy:     $COPY_DIR"
 echo "Original: $ORIGINAL_DIR"
-echo "Branch:   $COPY_BRANCH -> $MERGE_BRANCH"
+echo "Target:   $COPY_BRANCH -> main"
 echo ""
 
 # --- Phase 1: Pre-merge checks in the copy ---
@@ -179,7 +188,7 @@ git fetch "$REMOTE_NAME"
 
 # --- Phase 3: Create merge branch and merge ---
 
-echo "[4/5] Creating merge branch and merging..."
+echo "[4/5] Merging into main..."
 
 # Ensure we're on main
 CURRENT_BRANCH=$(git branch --show-current)
@@ -188,13 +197,7 @@ if [ "$CURRENT_BRANCH" != "main" ]; then
   git checkout main
 fi
 
-# Delete merge branch if it exists (from a previous attempt)
-git branch -D "$MERGE_BRANCH" 2>/dev/null || true
-
-# Create merge branch from main
-git checkout -b "$MERGE_BRANCH"
-
-# Merge the copy's work branch
+# Merge the copy's work branch directly into main
 if ! git merge "${REMOTE_NAME}/${COPY_BRANCH}" --no-edit -m "feat: merge ${FEATURE_NAME} from isolated copy"; then
   echo ""
   echo "=== MERGE CONFLICT ==="
@@ -212,24 +215,36 @@ fi
 echo "[5/5] Cleaning up temporary remote..."
 git remote remove "$REMOTE_NAME"
 
+# Optional: delete the copy directory
+if [ "$CLEANUP" = "true" ]; then
+  echo ""
+  echo "[+] Deleting copy directory..."
+  rm -rf "$COPY_DIR"
+  echo "  Deleted: $COPY_DIR"
+fi
+
 echo ""
 
 # --- Summary ---
 
 echo "=== Merge Complete ==="
 echo ""
-echo "Changes merged into branch: $MERGE_BRANCH"
+echo "Changes merged into: main"
 echo "Commits merged: $COMMIT_COUNT"
 echo ""
-echo "You are now on branch '$MERGE_BRANCH'. Review the changes:"
-echo "  git log --oneline main..$MERGE_BRANCH"
-echo "  git diff main..$MERGE_BRANCH --stat"
+echo "Review:"
+echo "  git log --oneline ORIG_HEAD..HEAD"
+echo "  git diff ORIG_HEAD..HEAD --stat"
 echo ""
-echo "Next steps:"
-echo "  1. Review the merged changes"
-echo "  2. Run /cleanup-copy $FEATURE_NAME to delete the copy"
-echo "  3. Run /release-pr to create a PR and tag"
+if [ "$CLEANUP" = "false" ]; then
+  echo "Next steps:"
+  echo "  1. Run /cleanup-copy $FEATURE_NAME to delete the copy"
+  echo "  2. Run /release-pr to create a PR and tag"
+else
+  echo "Next steps:"
+  echo "  1. Run /release-pr to create a PR and tag"
+fi
 echo ""
-echo "Or to undo the merge:"
-echo "  git checkout main && git branch -D $MERGE_BRANCH"
+echo "To undo the merge:"
+echo "  git reset --hard ORIG_HEAD"
 echo ""
