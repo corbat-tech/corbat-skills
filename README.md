@@ -2,7 +2,7 @@
 
 Reusable AI agent skills for parallel development, code quality, and release automation.
 
-12 production-ready skills following the open [SKILL.md](https://agentskills.io) standard — compatible with Claude Code, Cursor, Copilot, Cline, Codex, and other agents.
+15 production-ready skills following the open [SKILL.md](https://agentskills.io) standard — compatible with Claude Code, Cursor, Copilot, Cline, Codex, and other agents.
 
 ## Skills
 
@@ -16,9 +16,19 @@ Reusable AI agent skills for parallel development, code quality, and release aut
 
 ### Parallel Development
 
+#### Worktree-based (recommended for parallel agents)
+
 | Skill | Description |
 |---|---|
-| [`/fork-project`](skills/fork-project/) | Create an isolated project copy for parallel feature development. |
+| [`/worktree-start`](skills/worktree-start/) | Create a git worktree for isolated parallel feature development. Lighter than fork — shared git history, zero agent contention. |
+| [`/worktree-finish`](skills/worktree-finish/) | Merge a worktree branch into main and clean up the worktree. |
+| [`/worktree-list`](skills/worktree-list/) | List active worktrees with branch, commits ahead of main, and dirty status. |
+
+#### Fork-based (maximum isolation, separate `.git`)
+
+| Skill | Description |
+|---|---|
+| [`/fork-project`](skills/fork-project/) | Create an isolated project copy (full clone) for parallel feature development. |
 | [`/merge-back`](skills/merge-back/) | Merge changes from a copy back to the original project. |
 | [`/cleanup-copy`](skills/cleanup-copy/) | Delete a copy after merge-back is complete. |
 | [`/new-feature`](skills/new-feature/) | Start a new feature (fork + setup instructions). |
